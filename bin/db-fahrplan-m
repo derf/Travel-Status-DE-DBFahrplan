@@ -1,0 +1,63 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use 5.010;
+
+our $VERSION = '0.00';
+
+use Encode qw(decode);
+use Getopt::Long qw(:config no_ignore_case);
+use Data::Dumper;
+use List::Util qw(max);
+use Travel::Status::DE::DBFahrplan;
+
+my $date;
+my $time;
+my $api_key;
+
+sub display_result {
+	my (@lines) = @_;
+
+	my @line_length;
+
+	for my $i ( 0 .. 3 ) {
+		$line_length[$i] = max map { length( $_->[$i] ) } @lines;
+	}
+
+	for my $line (@lines) {
+		printf(
+			join( q{  }, ( map { "%-${_}s" } @line_length ) ),
+			@{$line}[ 0 .. 3 ]
+		);
+		print "\n";
+	}
+	return;
+}
+
+binmode( STDOUT, ':encoding(utf-8)' );
+for my $arg (@ARGV) {
+	$arg = decode( 'UTF-8', $arg );
+}
+
+GetOptions(
+	'd|date=s' => \$date,
+	't|time=s' => \$time,
+	'K|key=s'  => \$api_key,
+);
+
+my $station = shift;
+
+my $status = Travel::Status::DE::DBFahrplan->new(
+	date    => $date,
+	time    => $time,
+	api_key => $api_key,
+	station => $station,
+);
+
+my @output;
+
+for my $d ( $status->results ) {
+	push( @output, [ $d->time, $d->train, $d->destination, $d->platform ] );
+}
+
+display_result(@output);
