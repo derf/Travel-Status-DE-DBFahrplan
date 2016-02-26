@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use 5.010;
+use utf8;
 
 our $VERSION = '0.00';
 
@@ -25,11 +26,20 @@ sub display_result {
 	}
 
 	for my $line (@lines) {
+		my $departure = $line->[4];
 		printf(
 			join( q{  }, ( map { "%-${_}s" } @line_length ) ),
 			@{$line}[ 0 .. 3 ]
 		);
 		print "\n";
+		for my $s ( $departure->sched_route ) {
+			printf(
+				"       %s → %s  %s: %s\n",
+				$s->{sched_arrival}   // q{     },
+				$s->{sched_departure} // q{     },
+				$s->{station}, $s->{platform}
+			);
+		}
 	}
 	return;
 }
@@ -57,7 +67,7 @@ my $status = Travel::Status::DE::DBFahrplan->new(
 my @output;
 
 for my $d ( $status->results ) {
-	push( @output, [ $d->time, $d->train, $d->destination, $d->platform ] );
+	push( @output, [ $d->time, $d->train, $d->destination, $d->platform, $d ] );
 }
 
 display_result(@output);

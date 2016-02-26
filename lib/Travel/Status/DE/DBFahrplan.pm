@@ -35,6 +35,7 @@ sub new {
 		api_key        => $conf{api_key},
 		developer_mode => $conf{developer_mode},
 		station        => $conf{station},
+		ua             => $ua,
 	};
 
 	bless( $ref, $obj );
@@ -80,7 +81,10 @@ sub results {
 	for my $dep ( @{ $self->{json}{DepartureBoard}{Departure} } ) {
 		push(
 			@{ $self->{results} },
-			Travel::Status::DE::DBFahrplan::Result->new( %{$dep} )
+			Travel::Status::DE::DBFahrplan::Result->new(
+				json => $dep,
+				ua   => $self->{ua}
+			)
 		);
 	}
 
